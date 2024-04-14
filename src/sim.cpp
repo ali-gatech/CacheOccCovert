@@ -64,13 +64,13 @@ char trace_filename[MAX_CORES][1024];
 uint64_t last_printdot_cycle;
 unsigned long long cycle;
 
-random_device rd;
-uniform_int_distribution<uint32_t> dist(1, 50);
-uniform_int_distribution <uint32_t> addr;
+// random_device rd;
+// uniform_int_distribution<uint32_t> dist(1, 50);
+// uniform_int_distribution <uint32_t> addr;
 
-vector <uint32_t> attacker_addr(attacker_range);
-vector <uint32_t> workload1(workload1_range);
-vector <uint3_t> workload2(workload2_range);
+// vector <uint32_t> attacker_addr(attacker_range);
+// vector <uint32_t> workload1(workload1_range);
+// vector <uint3_t> workload2(workload2_range);
 
 /***************************************************************************************
  * Main
@@ -97,10 +97,10 @@ int main(int argc, char** argv)
     //--------------------------------------------------------------------
     bool all_cores_done = 0;
 
-	for (int i = 0; i < attacker_range; i++)
-	{
-		attacker_addr[i] = addr(rd);
-	}
+	// for (int i = 0; i < attacker_range; i++)
+	// {
+	// 	attacker_addr[i] = addr(rd);
+	// }
 
 	// for (int j = 0; j < workload1_range; j++)
 	// {

@@ -12,9 +12,26 @@
 
 using namespace std;
 
+extern uint64_t  DCACHE_ASSOC;
 
+#define ACCESS_PATTERN1		16384
+#define ACCESS_PATTERN2		5000
+// #define ACCESS_PATTERN2		10000
+#define ACCESS_PATTERN3		16384
+
+#define TOTAL_ACCESS		ACCESS_PATTERN1 + ACCESS_PATTERN2 + ACCESS_PATTERN3
+
+#define NUM_SETS_ACCESS_PATTERN2	(ACCESS_PATTERN2 / DCACHE_ASSOC)
+#define START_SET_ACCESS_PATTERN2	23
+// #define START_SET_ACCESS_PATTERN2	701
+
+#define TAG1_ACCESS_PATTERN1			65536
+#define TAG1_ACCESS_PATTERN2			TAG1_ACCESS_PATTERN1
+#define TAG2_ACCESS_PATTERN2			TAG1_ACCESS_PATTERN2 * 16
 
 extern uint64_t cycle;
+
+uint64_t access_count = 0;
 
 extern void die_message(const char* msg);
 
@@ -72,6 +89,38 @@ void core_cycle(Core* c){
 
 	uint32_t ifetch_delay=0, ld_delay=0, bubble_cycles=0;
 	
+	Addr temp_lineaddr;
+
+	if (access_count < ACCESS_PATTERN1)
+	{
+		c->trace_inst_addr = (Addr) ((access_count / DCACHE_ASSOC) + TAG1_ACCESS_PATTERN1);
+	}
+	else if ((access_count >= ACCESS_PATTERN1) && (access_count < (ACCESS_PATTERN1 + ACCESS_PATTERN2)))
+	{
+		srand(100);
+		temp_lineaddr = (Addr) ((rand() % NUM_SETS_ACCESS_PATTERN2) + START_SET_ACCESS_PATTERN2);
+
+		if ((rand() % 2) == 0)
+			temp_lineaddr = temp_lineaddr + (Addr) TAG1_ACCESS_PATTERN2;
+		else
+			temp_lineaddr = temp_lineaddr + (Addr) TAG2_ACCESS_PATTERN2;
+
+		c->trace_inst_addr = temp_lineaddr;
+	}
+	else if ((access_count >= (ACCESS_PATTERN1 + ACCESS_PATTERN2)) && (access_count < TOTAL_ACCESS))
+	{
+		c->trace_inst_addr = (Addr) ((access_count - ACCESS_PATTERN1 - ACCESS_PATTERN2) / DCACHE_ASSOC);
+	}
+
+	access_count++;
+
+	if (access_count == TOTAL_ACCESS)
+	{
+		c->done = true;
+		c->done_inst_count = c->inst_count;
+		c->done_cycle_count = cycle;
+	}
+		
 
 	ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
 	if (ifetch_delay > 1) {

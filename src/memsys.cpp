@@ -217,6 +217,7 @@ uint64_t memsys_access_modeA(Memsys* sys, Addr lineaddr, Access_Type type, uint3
 	uint64_t delay = 0;
 	// IFETCH accesses go to icache, which we don't have in part A
 	bool needs_dcache_access = !(type == ACCESS_TYPE_IFETCH);
+	needs_dcache_access = true;
 
 	// Stores write to the caches
 	bool is_write = (type == ACCESS_TYPE_STORE);
