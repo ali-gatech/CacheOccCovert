@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <iostream>
+#include <random>
 
 #include "cache.h"
 
@@ -192,8 +193,6 @@ uint32_t cache_find_victim(Cache *c, uint32_t set_index, uint32_t core_id){
 
 	else if(c->replace_policy == 3)
 	{
-		unsigned long long int max_access_time = c->cache_sets[set_index].cache_ways[0].LAT;
-
 		for (int i = 0; i < c->cache_sets[0].ways; i++)
 		{
 			if(!c->cache_sets[set_index].cache_ways[i].valid)
@@ -201,10 +200,9 @@ uint32_t cache_find_victim(Cache *c, uint32_t set_index, uint32_t core_id){
 				min_index = i;
 				return min_index;
 			}
-			else if (c->cache_sets[set_index].cache_ways[i].LAT > max_access_time)
+			else
 			{
-				min_index = i;
-				max_access_time = c->cache_sets[set_index].cache_ways[i].LAT;
+				min_index = rand() % c->cache_sets[0].ways;
 			}
 		}
 	}

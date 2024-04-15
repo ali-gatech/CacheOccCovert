@@ -28,7 +28,7 @@
 
 MODE        SIM_MODE        = SIM_MODE_A;
 uint64_t       CACHE_LINESIZE  = 64;
-uint64_t       REPL_POLICY     = 0; // 0:LRU 1:LFU+MRU 2:SWP (Part E)  
+uint64_t       REPL_POLICY     = 3; // 0:LRU 1:LFU+MRU 2:SWP (Part E)  
 
 uint64_t       DCACHE_SIZE     = 1024*1024;
 uint64_t       DCACHE_ASSOC    = 8;
