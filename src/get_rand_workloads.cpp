@@ -7,7 +7,7 @@
 using namespace std;
 
 random_device rd;
-uniform_int_distribution<uint32_t> dist (16384, 16384*1.25);
+uniform_int_distribution<uint32_t> dist (16384, 16384*1.2);
 
 int main()
 {
