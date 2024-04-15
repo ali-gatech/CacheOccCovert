@@ -11,7 +11,9 @@
 
 #define attacker_range  10000
 #define workload1_range       1000
-#define workload2_range       5000   
+#define workload2_range       5000  
+
+#define CacheTiempo 0
 
 typedef uint64_t Addr;
 

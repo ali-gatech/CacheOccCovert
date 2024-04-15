@@ -216,26 +216,26 @@ uint64_t memsys_access_modeA(Memsys* sys, Addr lineaddr, Access_Type type, uint3
   
 	uint64_t delay = 0;
 	// IFETCH accesses go to icache, which we don't have in part A
-	bool needs_dcache_access = !(type == ACCESS_TYPE_IFETCH);
-	needs_dcache_access = true;
+	// bool needs_dcache_access = !(type == ACCESS_TYPE_IFETCH);
+	// needs_dcache_access = true;
 
 	// Stores write to the caches
 	bool is_write = (type == ACCESS_TYPE_STORE);
 
-	if (needs_dcache_access) {
+	// if (needs_dcache_access) {
 		// Miss
-		if (cache_access(sys->dcache,lineaddr,is_write,core_id)) {
-			// Install the new line in L1
-			printf("1\n");
-			delay = 1;
-		}
-		else
-		{
-			delay = 3;
-			printf("0\n");
-			cache_install(sys->dcache,lineaddr,is_write,core_id);
-		}
+	if (cache_access(sys->dcache,lineaddr,is_write,core_id)) {
+		// Install the new line in L1
+		//printf("1\n");
+		delay = 1;
 	}
+	else
+	{
+		delay = 3;
+		//printf("0\n");
+		cache_install(sys->dcache,lineaddr,is_write,core_id);
+	}
+	// }
 
 	// Timing is not simulated in Part A
 	return delay;

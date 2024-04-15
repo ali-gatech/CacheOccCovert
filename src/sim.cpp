@@ -15,6 +15,7 @@
 #include "core.h"
 #include <vector>
 #include <random>
+#include <iostream>
 
 #define PRINT_DOTS   1
 #define DOT_INTERVAL 100000
@@ -40,6 +41,8 @@ uint64_t       L2CACHE_ASSOC   = 16;
 uint64_t       L2CACHE_REPL    = 1;
 
 uint64_t       SWP_CORE0_WAYS  = 0;
+
+bool 		   WORKLOAD	   	   = 0;
 
 uint64_t       NUM_CORES       = 2;
 
@@ -221,6 +224,15 @@ void get_params(int argc, char** argv){
 		if (argv[i][0] == '-') {
 			if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
 				die_usage();
+			}
+
+			else if(!strcmp(argv[i], "-workload"))
+			{
+				if(i < argc -1)
+				{
+					WORKLOAD = (bool)atoi(argv[i+1]);
+					i++;
+				}
 			}
 			else if (!strcmp(argv[i], "-mode")) {
 				if (i < argc - 1) {

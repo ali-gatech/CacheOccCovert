@@ -1,39 +1,26 @@
-#include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <math.h>
+#include <vector>
 #include <iostream>
 #include "core.h"
-#include <random>
-#include <vector>
+#include "workloads.h"
+
+extern uint64_t  DCACHE_ASSOC;
+extern uint64_t CACHE_LINESIZE;
+
+extern uint64_t cycle;
+extern bool WORKLOAD;
+
+uint64_t access_count = 0;
+uint64_t workload_displace = 0;
+uint64_t rewrite_display = 0;
+
+extern void die_message(const char* msg);
 
 
 using namespace std;
-
-extern uint64_t  DCACHE_ASSOC;
-
-#define ACCESS_PATTERN1		16384
-#define ACCESS_PATTERN2		5000
-// #define ACCESS_PATTERN2		10000
-#define ACCESS_PATTERN3		16384
-
-#define TOTAL_ACCESS		ACCESS_PATTERN1 + ACCESS_PATTERN2 + ACCESS_PATTERN3
-
-#define NUM_SETS_ACCESS_PATTERN2	(ACCESS_PATTERN2 / DCACHE_ASSOC)
-#define START_SET_ACCESS_PATTERN2	23
-// #define START_SET_ACCESS_PATTERN2	701
-
-#define TAG1_ACCESS_PATTERN1			65536
-#define TAG1_ACCESS_PATTERN2			TAG1_ACCESS_PATTERN1
-#define TAG2_ACCESS_PATTERN2			TAG1_ACCESS_PATTERN2 * 16
-
-extern uint64_t cycle;
-
-uint64_t access_count = 0;
-
-extern void die_message(const char* msg);
 
 
 ////////////////////////////////////////////////////////////////////
@@ -68,6 +55,8 @@ void core_init_trace(Core* c){
 ////////////////////////////////////////////////////////////////////
 
 void core_cycle(Core* c){
+
+	// cout << "A\n";
 	if (c->done) {
 		return;
 	}
@@ -93,39 +82,68 @@ void core_cycle(Core* c){
 
 	if (access_count < ACCESS_PATTERN1)
 	{
-		c->trace_inst_addr = (Addr) ((access_count / DCACHE_ASSOC) + TAG1_ACCESS_PATTERN1);
+		// c->trace_inst_addr = (Addr) ((access_count / DCACHE_ASSOC) + TAG1_ACCESS_PATTERN1);
+		c->trace_inst_addr = (Addr) access_count * CACHE_LINESIZE;
+		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
 	}
 	else if ((access_count >= ACCESS_PATTERN1) && (access_count < (ACCESS_PATTERN1 + ACCESS_PATTERN2)))
 	{
-		srand(100);
-		temp_lineaddr = (Addr) ((rand() % NUM_SETS_ACCESS_PATTERN2) + START_SET_ACCESS_PATTERN2);
+		if(WORKLOAD == 0)
+		{
+			c->trace_inst_addr = workload1[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+		}
+		else if (WORKLOAD == 1)
+		{
+			c->trace_inst_addr = workload2[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+		}
+		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
+		if (ifetch_delay > 1) {
+			bubble_cycles += (ifetch_delay-1);
+			workload_displace++;
+		}
 
-		if ((rand() % 2) == 0)
-			temp_lineaddr = temp_lineaddr + (Addr) TAG1_ACCESS_PATTERN2;
-		else
-			temp_lineaddr = temp_lineaddr + (Addr) TAG2_ACCESS_PATTERN2;
 
-		c->trace_inst_addr = temp_lineaddr;
+		// srand(100);
+		// temp_lineaddr = (Addr) ((rand() % NUM_SETS_ACCESS_PATTERN2) + START_SET_ACCESS_PATTERN2);
+
+		// if ((rand() % 2) == 0)
+		// 	temp_lineaddr = temp_lineaddr + (Addr) TAG1_ACCESS_PATTERN2;
+		// else
+		// 	temp_lineaddr = temp_lineaddr + (Addr) TAG2_ACCESS_PATTERN2;
+
 	}
 	else if ((access_count >= (ACCESS_PATTERN1 + ACCESS_PATTERN2)) && (access_count < TOTAL_ACCESS))
 	{
-		c->trace_inst_addr = (Addr) ((access_count - ACCESS_PATTERN1 - ACCESS_PATTERN2) / DCACHE_ASSOC);
+		// c->trace_inst_addr = (Addr) ((access_count - ACCESS_PATTERN1 - ACCESS_PATTERN2) / DCACHE_ASSOC);
+		c->trace_inst_addr = (Addr) ((access_count - (ACCESS_PATTERN1 + ACCESS_PATTERN2)) * CACHE_LINESIZE);
+		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
+		if (ifetch_delay > 1) {
+			rewrite_display++;
+			bubble_cycles += (ifetch_delay-1);
+		}
+		
 	}
 
 	access_count++;
-
+	//if(access_count == ACCESS_PATTERN1 + ACCESS_PATTERN2)
 	if (access_count == TOTAL_ACCESS)
 	{
 		c->done = true;
 		c->done_inst_count = c->inst_count;
 		c->done_cycle_count = cycle;
+		cout << endl << "Workload Displace" << " " << workload_displace << endl;
+		cout << "Rewrite displace" << " " << rewrite_display << endl;
 	}
-		
 
-	ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
-	if (ifetch_delay > 1) {
-		bubble_cycles += (ifetch_delay-1);
-	}
+	// ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
+	// if (ifetch_delay > 1) {
+	// 	bubble_cycles += (ifetch_delay-1);
+	// }
+
+	// if(access_count < ACCESS_PATTERN1)
+	// {
+	// 	bubble_cycles = 0;
+	// }
 
 	// if (c->trace_inst_type == INST_TYPE_LOAD) {
 	// 	ld_delay = memsys_access(c->memsys, c->trace_ldst_addr, ACCESS_TYPE_LOAD, c->core_id);
