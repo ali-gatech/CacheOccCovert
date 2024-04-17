@@ -18,7 +18,12 @@ using namespace std;
 
 uint64_t cachehits = 0;
 
+uint16_t low_bound  =   1;
+uint16_t up_bound   =   50; 
 
+random_device rd;
+uniform_int_distribution<uint32_t> dist(1, 500);
+uniform_int_distribution <int> bin(0,1);
 
 /////////////////////////////////////////////////////////////////////////////////////
 // ---------------------- DO NOT MODIFY THE PRINT STATS FUNCTION --------------------
@@ -142,6 +147,14 @@ void cache_install(Cache* c, Addr lineaddr, uint32_t is_write, uint32_t core_id)
 	new_line->tag = tag_index;
 	new_line->valid = true;
 	new_line->freq = 1;
+
+	#if CacheTiempo
+		//new_line->counter = (uint32_t)(rand() % (up_bound - low_bound)) + low_bound;
+		new_line->counter = dist(rd);
+		// printf("Tag: %d Counter value: %d\n", new_line->tag, new_line->counter);
+		//new_line->counter = (bin(rd)) ? low_bound : up_bound;
+	#endif
+
 	if (is_write)
 	{
 		new_line->dirty = true;

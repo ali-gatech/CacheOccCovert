@@ -24,6 +24,9 @@ struct Cache_Line
     uint8_t coreID;
     uint32_t freq;
     unsigned long long int LAT;
+    #if CacheTiempo
+        uint32_t counter;
+    #endif
 };
 
 struct Cache_Set
@@ -45,6 +48,9 @@ struct Cache
     uint64_t stat_read_miss;
     uint64_t stat_write_miss;
     uint64_t stat_dirty_evicts;
+    uint64_t stat_set_conflicts;
+    uint64_t stat_place_invalid;
+    uint64_t stat_timeouts;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,7 @@
 #define workload1_range       1000
 #define workload2_range       5000  
 
-#define CacheTiempo 0
+#define CacheTiempo 1
 
 typedef uint64_t Addr;
 
