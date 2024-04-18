@@ -8,6 +8,7 @@
 #include "workloads.h"
 
 extern uint64_t  DCACHE_ASSOC;
+extern uint64_t  DCACHE_SIZE;
 extern uint64_t CACHE_LINESIZE;
 
 extern uint64_t cycle;
@@ -16,7 +17,9 @@ extern bool WORKLOAD;
 uint64_t access_count = 0;
 uint64_t workload_displace = 0;
 uint64_t rewrite_display = 0;
+uint64_t attack_cacheline_index = 0;
 
+bool attack_sweep = false;
 extern void die_message(const char* msg);
 
 
@@ -57,6 +60,8 @@ void core_init_trace(Core* c){
 void core_cycle(Core* c){
 
 	// cout << "A\n";
+	attack_sweep = false;
+	static uint64_t iterator = 0;
 	if (c->done) {
 		return;
 	}
@@ -85,37 +90,38 @@ void core_cycle(Core* c){
 		// c->trace_inst_addr = (Addr) ((access_count / DCACHE_ASSOC) + TAG1_ACCESS_PATTERN1);
 		c->trace_inst_addr = (Addr) access_count * CACHE_LINESIZE;
 		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
+		access_count++;
 	}
-	else if ((access_count >= ACCESS_PATTERN1) && (access_count < (ACCESS_PATTERN1 + ACCESS_PATTERN2)))
+	else if ((access_count >= ACCESS_PATTERN1) && (cycle - (DCACHE_SIZE/CACHE_LINESIZE)) < 10000)
 	{
 		if(WORKLOAD == 0)
 		{
-			c->trace_inst_addr = workload1[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+			// c->trace_inst_addr = workload1[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+			c->trace_inst_addr = workload1[iterator] * CACHE_LINESIZE;
 		}
 		else if (WORKLOAD == 1)
 		{
-			c->trace_inst_addr = workload2[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+			// c->trace_inst_addr = workload2[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
+			c->trace_inst_addr = workload2[iterator] * CACHE_LINESIZE;
 		}
+		iterator++;
 		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
 		if (ifetch_delay > 1) {
 			bubble_cycles += (ifetch_delay-1);
 			workload_displace++;
 		}
 
-
-		// srand(100);
-		// temp_lineaddr = (Addr) ((rand() % NUM_SETS_ACCESS_PATTERN2) + START_SET_ACCESS_PATTERN2);
-
-		// if ((rand() % 2) == 0)
-		// 	temp_lineaddr = temp_lineaddr + (Addr) TAG1_ACCESS_PATTERN2;
-		// else
-		// 	temp_lineaddr = temp_lineaddr + (Addr) TAG2_ACCESS_PATTERN2;
-
 	}
-	else if ((access_count >= (ACCESS_PATTERN1 + ACCESS_PATTERN2)) && (access_count < TOTAL_ACCESS))
+	else if ((cycle - (DCACHE_SIZE/CACHE_LINESIZE) >= 10000) && attack_cacheline_index < (DCACHE_SIZE/CACHE_LINESIZE))
 	{
+		if(attack_cacheline_index == 0)
+		{
+			cout << "Cycle count = " << cycle - DCACHE_SIZE/CACHE_LINESIZE << endl;
+		}
+		attack_sweep = true;
 		// c->trace_inst_addr = (Addr) ((access_count - ACCESS_PATTERN1 - ACCESS_PATTERN2) / DCACHE_ASSOC);
-		c->trace_inst_addr = (Addr) ((access_count - (ACCESS_PATTERN1 + ACCESS_PATTERN2)) * CACHE_LINESIZE);
+		c->trace_inst_addr = (Addr) (attack_cacheline_index * CACHE_LINESIZE);
+		attack_cacheline_index++;
 		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
 		if (ifetch_delay > 1) {
 			rewrite_display++;
@@ -123,11 +129,10 @@ void core_cycle(Core* c){
 		}
 		
 	}
-
-	access_count++;
 	//if(access_count == ACCESS_PATTERN1 + ACCESS_PATTERN2)
-	if (access_count == TOTAL_ACCESS)
+	if (attack_cacheline_index == (DCACHE_SIZE/CACHE_LINESIZE))
 	{
+		cout << "Iterator = " << iterator << endl;
 		c->done = true;
 		c->done_inst_count = c->inst_count;
 		c->done_cycle_count = cycle;

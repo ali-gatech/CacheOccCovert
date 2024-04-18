@@ -14,7 +14,6 @@
 #define workload2_range       5000  
 
 #define CacheTiempo 1
-
 typedef uint64_t Addr;
 
 typedef enum Inst_Type_Enum {

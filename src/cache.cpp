@@ -13,6 +13,8 @@
 
 unsigned long long int access_time = 1;
 extern uint64_t SWP_CORE0_WAYS;
+extern uint64_t CACHE_LINESIZE;
+extern uint64_t DCACHE_SIZE;
 
 using namespace std;
 
@@ -20,9 +22,11 @@ uint64_t cachehits = 0;
 
 uint16_t low_bound  =   1;
 uint16_t up_bound   =   50; 
+bool free_space = false;
+extern bool attack_sweep;
 
 random_device rd;
-uniform_int_distribution<uint32_t> dist(1, 500);
+uniform_int_distribution<uint32_t> dist(1, 2 * (DCACHE_SIZE/CACHE_LINESIZE));
 uniform_int_distribution <int> bin(0,1);
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -42,13 +46,16 @@ void cache_print_stats(Cache* c, char* header){
 
 	printf("\n%s_READ_ACCESS    \t\t : %10llu", header, c->stat_read_access);
 	printf("\n%s_WRITE_ACCESS   \t\t : %10llu", header, c->stat_write_access);
-	printf("\n%s_READ_MISS      \t\t : %10llu", header, c->stat_read_miss - 16384);
+	printf("\n%s_READ_MISS      \t\t : %10llu", header, c->stat_read_miss);
 	printf("\n%s_WRITE_MISS     \t\t : %10llu", header, c->stat_write_miss);
 	printf("\n%s_READ_MISS_PERC  \t\t : %10.3f", header, 100*read_mr);
 	printf("\n%s_WRITE_MISS_PERC \t\t : %10.3f", header, 100*write_mr);
 	printf("\n%s_DIRTY_EVICTS   \t\t : %10llu", header, c->stat_dirty_evicts);
 	printf("\n%s_CACHE_HITS   \t\t : %10llu", header, cachehits);
-
+	#if CacheTiempo
+		printf("\n%s_FREE_SPACE   \t\t : %10llu", header, c->stat_place_invalid);
+		printf("\n%s_SET_CONFLICTS   \t\t : %10llu", header, c->stat_set_conflicts);
+	#endif
 	printf("\n");
 }
 
@@ -108,7 +115,8 @@ bool cache_access(Cache* c, Addr lineaddr, uint32_t is_write, uint32_t core_id){
 			line_access->freq++;
 			if (is_write)
 				line_access->dirty = true;
-			cachehits++;
+			if(attack_sweep)
+				cachehits++;
 			return true;
 		}
 	}
@@ -120,7 +128,8 @@ bool cache_access(Cache* c, Addr lineaddr, uint32_t is_write, uint32_t core_id){
 	else
 	{
 		//cout << hex << lineaddr << endl;
-		c->stat_read_miss++;
+		if(attack_sweep)
+			c->stat_read_miss++;	
 	}
 	return false;
 }
@@ -134,6 +143,7 @@ void cache_install(Cache* c, Addr lineaddr, uint32_t is_write, uint32_t core_id)
 
 	uint32_t set_index = lineaddr & (c->num_sets-1);
 	uint32_t tag_index = lineaddr;
+	free_space = false;
 
 	uint32_t victim_index = cache_find_victim(c, set_index, core_id);
 
@@ -148,12 +158,21 @@ void cache_install(Cache* c, Addr lineaddr, uint32_t is_write, uint32_t core_id)
 	new_line->valid = true;
 	new_line->freq = 1;
 
-	#if CacheTiempo
-		//new_line->counter = (uint32_t)(rand() % (up_bound - low_bound)) + low_bound;
-		new_line->counter = dist(rd);
-		// printf("Tag: %d Counter value: %d\n", new_line->tag, new_line->counter);
-		//new_line->counter = (bin(rd)) ? low_bound : up_bound;
-	#endif
+	if(free_space)
+	{
+		#if CacheTiempo
+			new_line->counter = dist(rd);
+			if(attack_sweep)
+				c->stat_place_invalid++;
+		#endif
+		
+	}
+	else
+	{
+		if(attack_sweep)
+			c->stat_set_conflicts++;
+	}
+
 
 	if (is_write)
 	{
@@ -211,7 +230,9 @@ uint32_t cache_find_victim(Cache *c, uint32_t set_index, uint32_t core_id){
 			if(!c->cache_sets[set_index].cache_ways[i].valid)
 			{
 				min_index = i;
+				free_space = true;
 				return min_index;
+
 			}
 			else
 			{

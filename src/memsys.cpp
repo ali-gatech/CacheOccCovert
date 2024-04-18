@@ -227,13 +227,13 @@ uint64_t memsys_access_modeA(Memsys* sys, Addr lineaddr, Access_Type type, uint3
 		// Miss
 	if (cache_access(sys->dcache,lineaddr,is_write,core_id)) {
 		// Install the new line in L1
-		printf("1\n");
+		//printf("1\n");
 		delay = 1;
 	}
 	else
 	{
 		delay = 3;
-		printf("0\n");
+		//printf("0\n");
 		cache_install(sys->dcache,lineaddr,is_write,core_id);
 	}
 	// }
