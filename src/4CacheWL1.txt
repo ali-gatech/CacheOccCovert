@@ -1,0 +1,33 @@
+
+   0 M	Cycle count = 10000
+Iterator = 4749
+
+Workload Displace 2625
+Rewrite displace 9173
+
+
+CYCLES      			 :      61112
+
+CORE_0_INST         		 :      37517
+CORE_0_CYCLES       		 :      61111
+CORE_0_IPC          		 :      0.614
+
+MEMSYS_IFETCH_ACCESS  		 :      37517
+MEMSYS_LOAD_ACCESS    		 :          0
+MEMSYS_STORE_ACCESS   		 :          0
+MEMSYS_IFETCH_AVGDELAY		 :      2.502
+MEMSYS_LOAD_AVGDELAY  		 :      0.000
+MEMSYS_STORE_AVGDELAY 		 :      0.000
+
+DCACHE_READ_ACCESS    		 :      37517
+DCACHE_WRITE_ACCESS   		 :          0
+DCACHE_READ_MISS      		 :       9173
+DCACHE_WRITE_MISS     		 :          0
+DCACHE_READ_MISS_PERC  		 :     24.450
+DCACHE_WRITE_MISS_PERC 		 :      0.000
+DCACHE_DIRTY_EVICTS   		 :          0
+DCACHE_CACHE_HITS   		 :       7211
+DCACHE_FREE_SPACE   		 :       8729
+DCACHE_SET_CONFLICTS   		 :        444
+
+

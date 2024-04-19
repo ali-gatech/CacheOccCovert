@@ -42,7 +42,7 @@ uint64_t       L2CACHE_REPL    = 1;
 
 uint64_t       SWP_CORE0_WAYS  = 0;
 
-bool 		   WORKLOAD	   	   = 0;
+uint8_t		   WORKLOAD	   	   = 0;
 
 uint64_t       NUM_CORES       = 2;
 
@@ -228,9 +228,11 @@ void get_params(int argc, char** argv){
 
 			else if(!strcmp(argv[i], "-workload"))
 			{
-				if(i < argc -1)
+				if(i < argc - 1)
 				{
-					WORKLOAD = (bool)atoi(argv[i+1]);
+					// std::cout << atoi(argv[i+1]) + 5<<std::endl;
+					WORKLOAD = atoi(argv[i+1]);
+					std::cout << "Workload = " << WORKLOAD << std::endl;
 					i++;
 				}
 			}

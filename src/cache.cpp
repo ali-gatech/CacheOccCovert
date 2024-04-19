@@ -15,6 +15,7 @@ unsigned long long int access_time = 1;
 extern uint64_t SWP_CORE0_WAYS;
 extern uint64_t CACHE_LINESIZE;
 extern uint64_t DCACHE_SIZE;
+extern uint64_t DCACHE_ASSOC;
 
 using namespace std;
 
@@ -26,7 +27,7 @@ bool free_space = false;
 extern bool attack_sweep;
 
 random_device rd;
-uniform_int_distribution<uint32_t> dist(1, 2 * (DCACHE_SIZE/CACHE_LINESIZE));
+uniform_int_distribution<uint32_t> dist(1, 3 * (DCACHE_SIZE/CACHE_LINESIZE));
 uniform_int_distribution <int> bin(0,1);
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +38,7 @@ void cache_print_stats(Cache* c, char* header){
 	double read_mr =0;
 	double write_mr =0;
 	if (c->stat_read_access) {
-		read_mr = (double)(c->stat_read_miss) / (double)(c->stat_read_access);
+		read_mr = (double)(c->stat_read_miss) / (double)(c->stat_read_access - 16384);
 	}
 
 	if (c->stat_write_access) {

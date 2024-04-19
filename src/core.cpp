@@ -12,7 +12,7 @@ extern uint64_t  DCACHE_SIZE;
 extern uint64_t CACHE_LINESIZE;
 
 extern uint64_t cycle;
-extern bool WORKLOAD;
+extern uint8_t WORKLOAD;
 
 uint64_t access_count = 0;
 uint64_t workload_displace = 0;
@@ -104,6 +104,10 @@ void core_cycle(Core* c){
 			// c->trace_inst_addr = workload2[access_count - ACCESS_PATTERN1] * CACHE_LINESIZE;
 			c->trace_inst_addr = workload2[iterator] * CACHE_LINESIZE;
 		}
+		else if (WORKLOAD == 2)
+		{
+			c->trace_inst_addr = 0x12341234;
+		}
 		iterator++;
 		ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
 		if (ifetch_delay > 1) {
@@ -134,33 +138,11 @@ void core_cycle(Core* c){
 	{
 		cout << "Iterator = " << iterator << endl;
 		c->done = true;
-		c->done_inst_count = c->inst_count;
-		c->done_cycle_count = cycle;
+		c->done_inst_count = c->inst_count - 16384;
+		c->done_cycle_count = cycle - 16384;
 		cout << endl << "Workload Displace" << " " << workload_displace << endl;
 		cout << "Rewrite displace" << " " << rewrite_display << endl;
 	}
-
-	// ifetch_delay = memsys_access(c->memsys, c->trace_inst_addr, ACCESS_TYPE_IFETCH, c->core_id);
-	// if (ifetch_delay > 1) {
-	// 	bubble_cycles += (ifetch_delay-1);
-	// }
-
-	// if(access_count < ACCESS_PATTERN1)
-	// {
-	// 	bubble_cycles = 0;
-	// }
-
-	// if (c->trace_inst_type == INST_TYPE_LOAD) {
-	// 	ld_delay = memsys_access(c->memsys, c->trace_ldst_addr, ACCESS_TYPE_LOAD, c->core_id);
-	// }
-	// if (ld_delay > 1) {
-	// 	bubble_cycles += (ld_delay-1);
-	// }
-
-	// if (c->trace_inst_type == INST_TYPE_STORE){
-	// 	memsys_access(c->memsys, c->trace_ldst_addr, ACCESS_TYPE_STORE, c->core_id);
-	// }
-	//No bubbles for store misses
 
 	if (bubble_cycles) {
 		c->snooze_end_cycle = (cycle+bubble_cycles);
